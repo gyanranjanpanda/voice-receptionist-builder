@@ -1,0 +1,19 @@
+{
+  "industry": "generic",
+  "greetingStyle": "Friendly, welcoming, and helpful",
+  "commonIntents": [
+    "Opening hours",
+    "Location",
+    "Services",
+    "Pricing",
+    "Make a booking"
+  ],
+  "requiredLeadFields": [
+    "Name",
+    "Contact Number",
+    "Request Details"
+  ],
+  "escalationRules": "If the customer is upset or requesting a refund, take their details and promise a manager will call them back.",
+  "complianceWarnings": "Always maintain a polite and brand-safe tone.",
+  "appointmentFlowStyle": "Flexible. Ask how you can help, provide the info, and ask if they'd like to book."
+}
