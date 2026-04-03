@@ -1,38 +1,34 @@
-# System Architecture: AI Voice Receptionist Builder
+# Architecture Directive: Voice Receptionist Booking Engine
 
-## Overview
-This document outlines the Clean Architecture for the AI Voice Receptionist Builder. The system takes an unformatted business URL and constructs a highly intelligent, configuration-ready payload for Vapi.ai using strict deterministic domain structures, human-in-the-loop review gating, and deterministic LLM transformations.
+Established to govern the engineering and expansion of the V2 AI Voice Receptionist Integration.
 
-## Layer Definitions
+## Architectural Paradigm
+The system strictly follows **Clean Architecture** combined with **Domain-Driven Design (DDD)**. No framework-specific concepts or external routing objects should leak into the core business logic.
 
-### 1. Domain Layer (`src/domain/`)
-**Responsibility:** Pure business logic and system-agnostic state holding.
-- **Entities:** `BusinessProfile`, `ServiceOffering`, `FAQItem`, `OpeningHours`, `ContactChannel`, `LeadCaptureSchema`, `BookingPolicy`, `VoiceAssistantConfig`.
-- **Value Objects:** Time representations, Phone numbers, Email formatting.
-- **Validation Rules:**
-  - `OpeningHours` strictly normalized to ISO standards (or bounded strings).
-  - Business Claims explicitly bound to a `confidenceScore` [0.0 - 1.0].
-  - Mandatory flag `requiresReview` attached to assumptions.
+## 1. Domain Layer (The Core)
+This layer contains pure, unadulterated business logic. It possesses zero dependencies on HTTP servers, API requests, or external platform rules.
+- **Entities**: Structs tracking the lifecycle of an appointment (`AppointmentRequest`, `BookingConfirmation`, `AppointmentSlot`).
+- **Value Objects**: Immutable types ensuring validity before actions (`PhoneNumber`, `LocalDate`, `TimeZone`, `DurationMinutes`). If a phone number is invalid, it throws an error synchronously upon instantiation inside the domain.
+- **Rules**: `BookingPolicy` encapsulates domain invariants (e.g., "Cannot book outside business hours", "Time must always resolve in business timezone").
 
-### 2. Application Layer (`src/application/`)
-**Responsibility:** Coordinator and conductor of the domain. Translates commands into actions using injected infrastructure.
-- **Use Cases:**
-  - `ScrapeBusinessWebsite`: Takes URL, returns raw text datasets.
-  - `NormalizeBusinessData`: Parses unformatted text -> `BusinessProfile`.
-  - `GenerateAssistantKnowledge`: Converts `BusinessProfile` -> System Prompt.
-  - `GenerateConversationFlow`: Determines Vapi node routing.
-  - `BuildVapiPayload`: Assembles standard JSON config object.
-  - `DeployAssistant`: Pushes to Vapi context.
+## 2. Application Layer (The Orchestrators)
+This layer coordinates the flow of data but makes zero decisions on *how* data is stored or fetched.
+- **Use Cases**: Singular workflow scripts such as `CheckAvailability`, `HoldAppointmentSlot`, `ConfirmAppointmentBooking`, and `HandleBookingFailure`.
+- They interact with interfaces (Ports) but never import infrastructure libraries directly.
 
-### 3. Infrastructure Layer (`src/infrastructure/`)
-**Responsibility:** Interface implementations for external services.
-- **Adapters:**
-  - `CheerioScraper` / `PlaywrightScraper`: HTML/DOM extraction tools.
-  - `OpenAIExtractor`: Uses Structured Outputs for JSON ingestion of text into Domain schemas.
-  - `VapiApiClient`: Fetch/Axios implementation mapping to Vapi endpoints.
-  - `FileStorage`: Local disk writers/readers for caching and offline execution.
+## 3. Infrastructure Layer (The Adapters)
+This is where external reality connects to the internal domain.
+- **Booking Adapters**: `BookingProvider` interface implementation (`MockBookingProvider`, `CalComBookingProvider`). They translate the Domain's `AppointmentRequest` into an external HTTP request (e.g., Cal.com API).
+- **Vapi Adapters**: `VapiWebhookVerifier` ensuring requests are signed and secure.
+- **HTTP Gateway**: `WebhookServer.ts` (Express) routing physical POST requests to the Application Use Cases.
+- **Security & Observability**: Idempotency stores, metric hooks, and logging layers masking PII.
 
-### 4. Interface Layer (`src/interfaces/`)
-**Responsibility:** Delivery to the executing context/actor. 
-- **CLI Controllers:** Entry points for `--build`, `--test`, `--deploy`.
-- **Review Gate Presenters:** Console Table/Chalk emitters for risk warnings, extraction summaries, and missing entities.
+## 4. Interfaces Layer (The Delivery)
+The delivery mechanism to interact with the orchestration layer.
+- **CLI (Commander.js)**: Commands parsing user intentions (`voice-receptionist serve`, `voice-receptionist deploy`, `voice-receptionist test-booking`) and mapping them into the Application layer.
+- **System Prompts**: Auto-generated payload instructions (`GenerateVoiceResponseFromToolResult`) mapping JSON responses strictly to conversational strings for the OpenAI LLM.
+
+## Strict Rules
+- **No Route Bloat**: `WebhookServer.ts` routes must only parse req/res and pass immediately to Application Use Cases.
+- **Idempotency**: All booking actions must be retry-safe using unique correlation IDs.
+- **Slot Holds**: Never confirm instantly. Always map: `Availability Check` -> `Slot Hold` -> `Final Confirmation`.

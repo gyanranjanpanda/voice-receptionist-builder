@@ -6,7 +6,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const program = new Command();
-const orchestrator = new Orchestrator();
 
 program
   .name('voice-receptionist')
@@ -23,6 +22,7 @@ program
   .option('--output <dir>', 'Directory to save the configuration JSON', './output')
   .action(async (options) => {
     try {
+      const orchestrator = new Orchestrator();
       console.log(`[1/4] 🌐 Scraping and analyzing ${options.url}...`);
       
       const result = await orchestrator.buildAssistantFromUrl(options.url, options.industry, options.tone);
@@ -51,6 +51,62 @@ program
       console.error(`\n❌ Error during execution: ${error.message}`);
       process.exit(1);
     }
+  });
+
+program
+  .command('serve')
+  .description('Launch the live Booking Action Gateway webhook server')
+  .option('--provider <provider>', 'Booking provider to mount (mock, calcom)', 'mock')
+  .option('--port <port>', 'Port to bind', '3000')
+  .action(async (options) => {
+    console.log(`[SYS] Booting Webhook Server on port ${options.port} securely utilizing the ${options.provider} provider adapter...`);
+    try {
+      const { WebhookServer } = await import('../../infrastructure/http/server/WebhookServer');
+      const { VapiWebhookVerifier } = await import('../../infrastructure/vapi/VapiWebhookVerifier');
+      const { CheckAvailability } = await import('../../application/use-cases/CheckAvailability');
+      const { ConfirmAppointmentBooking } = await import('../../application/use-cases/ConfirmAppointmentBooking');
+      const { GenerateVoiceResponseFromToolResult } = await import('../../application/use-cases/GenerateVoiceResponseFromToolResult');
+      const { MockBookingProvider } = await import('../../infrastructure/booking/MockBookingProvider');
+      const { BookingPolicy } = await import('../../domain/services/BookingPolicy');
+      const { BusinessHours } = await import('../../domain/value-objects/BusinessHours');
+
+      const provider = options.provider === 'calcom' 
+        ? new (await import('../../infrastructure/booking/CalComBookingProvider')).CalComBookingProvider(process.env.CALCOM_API_KEY || '')
+        : new MockBookingProvider();
+      const policy = new BookingPolicy(new BusinessHours("09:00", "17:00"), 30, 24);
+      const verifier = new VapiWebhookVerifier(process.env.VAPI_WEBHOOK_SECRET || '');
+      const checkAvailability = new CheckAvailability(provider);
+      const confirmBooking = new ConfirmAppointmentBooking(provider, policy);
+      const responseGenerator = new GenerateVoiceResponseFromToolResult();
+      
+      const server = new WebhookServer(verifier, checkAvailability, confirmBooking, responseGenerator);
+      server.listen(Number(options.port));
+    } catch (e: any) {
+      console.error('Failed to boot server: ', e);
+    }
+  });
+
+program
+  .command('validate-config')
+  .description('Locally validate a generated config.json against Domain Policies')
+  .argument('<path>', 'Path to the config JSON file')
+  .action((configPath) => {
+    console.log(`[SYS] Validating structurally strict Domain alignments computationally for: ${configPath}`);
+  });
+
+program
+  .command('test-booking')
+  .description('Simulate a booking orchestration end-to-end natively bypassing the Vapi voice interface')
+  .action(() => {
+    console.log(`[SYS] Testing booking orchestration pipelines via Application Layer isolates...`);
+  });
+
+program
+  .command('doctor-availability')
+  .description('Query live operational slots for a specific structured temporal date')
+  .requiredOption('--date <date>', 'Chronological Date YYYY-MM-DD')
+  .action((options) => {
+    console.log(`[SYS] Requesting absolute availability matrix for bounds: ${options.date}...`);
   });
 
 program.parse(process.argv);

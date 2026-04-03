@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tend Dental - AI Voice Receptionist</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh;
+            margin: 0;
+        }
+        .container { 
+            background: white; 
+            padding: 50px; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            text-align: center; 
+            max-width: 500px;
+        }
+        h1 { color: #2c3e50; margin-bottom: 10px; }
+        p { color: #7f8c8d; line-height: 1.6; }
+        .pulse {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #dff9fb;
+            color: #2c3e50;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 20px;
+            border: 1px solid #c7ecee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🦷 Tend Dental</h1>
+        <p>Welcome to our Mocked Dental Clinic. This is a demonstration of the AI Voice Receptionist embedded natively into a business website.</p>
+        <p>Look at the bottom right corner of your screen—our automated Voice Assistant is online and waiting! Click the button to grant microphone access and start talking.</p>
+        <div class="pulse">Vapi.ai Assistant Linked Successfully 🎉</div>
+    </div>
+
+    <!-- Vapi Web SDK Snippet -->
+    <script>
+      var vapiInstance = null;
+      (function(d, t) {
+        var g = document.createElement(t),
+        s = d.getElementsByTagName(t)[0];
+        g.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
+        g.defer = true;
+        g.async = true;
+        s.parentNode.insertBefore(g, s);
+
+        g.onload = function() {
+          vapiInstance = window.vapiSDK.run({
+            apiKey: "01959e46-447f-4f90-872d-fa4bc262a8f4", // Using valid Public Key
+            assistant: "691125c3-5fa8-4ee5-b0d5-c1022ad2a154", // Injected your active Assistant ID from your Dashboard!
+            config: {
+              position: "bottom-right",
+              offset: "40px",
+              width: "50px",
+              height: "50px",
+              idle: {
+                color: "rgb(46, 204, 113)",
+                type: "pill",
+                title: "Call Receptionist",
+                subtitle: "Talk with our AI",
+                icon: "https://unpkg.com/lucide@latest/icons/phone.svg"
+              },
+              loading: {
+                color: "rgb(241, 196, 15)",
+                type: "pill",
+                title: "Connecting...",
+                subtitle: "Please wait",
+                icon: "https://unpkg.com/lucide@latest/icons/loader-2.svg"
+              },
+              active: {
+                color: "rgb(231, 76, 60)",
+                type: "pill",
+                title: "Call is active...",
+                subtitle: "End the call",
+                icon: "https://unpkg.com/lucide@latest/icons/phone-off.svg"
+              }
+            }
+          });
+        };
+      })(document, "script");
+    </script>
+</body>
+</html>

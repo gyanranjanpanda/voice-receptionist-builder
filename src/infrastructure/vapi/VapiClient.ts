@@ -1,20 +1,22 @@
 import axios from 'axios';
-import { VoiceAssistantConfig } from '../../domain/entities/VoiceAssistantConfig';
+import { type VoiceAssistantConfig } from '../../domain/entities/VoiceAssistantConfig';
 
 export class VapiClient {
   private baseUrl = 'https://api.vapi.ai';
-  private apiKey: string;
+  private apiKey: string | undefined;
 
   constructor(apiKey?: string) {
-    const key = apiKey || process.env.VAPI_API_KEY;
-    if (!key) throw new Error('VAPI_API_KEY is required to deploy.');
-    this.apiKey = key;
+    this.apiKey = apiKey || process.env.VAPI_API_KEY;
   }
 
   /**
    * Deploys the constructed assistant profile to Vapi.ai
    */
   async deployAssistant(config: VoiceAssistantConfig): Promise<any> {
+    if (!this.apiKey) {
+      throw new Error('VAPI_API_KEY is required to deploy.');
+    }
+
     try {
       const payload = {
         name: config.name,
