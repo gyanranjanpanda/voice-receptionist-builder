@@ -22,7 +22,15 @@ export class WebhookServer {
     this.app.get('/health', (req, res) => res.status(200).send('OK'));
     
     // Friendly root route
-    this.app.get('/', (req, res) => res.status(200).send('Voice Receptionist Webhook Server is running securely! 🚀'));
+    this.app.get('/', (req, res) => res.status(200).send('Voice Receptionist Webhook Server is running securely! 🚀. Go to /demo to view the UI!'));
+
+    // Serve Agent UI
+    this.app.get('/demo', (req, res) => {
+      res.sendFile(require('path').resolve(process.cwd(), 'demo.html'));
+    });
+    this.app.get('/demo2', (req, res) => {
+      res.sendFile(require('path').resolve(process.cwd(), 'v2-demo.html'));
+    });
 
     // Primary Booking Action Gateway 
     this.app.post('/api/vapi-webhook', this.verifier.verifySignature, async (req: Request, res: Response) => {
