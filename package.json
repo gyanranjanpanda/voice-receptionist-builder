@@ -8,7 +8,10 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "tsc",
+    "start": "node dist/interfaces/cli/index.js serve --provider mock --port $PORT",
+    "dev": "npx tsx src/interfaces/cli/index.ts serve --provider mock --port 3000"
   },
   "keywords": [],
   "author": "",
@@ -17,19 +20,19 @@
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^25.5.0",
-    "commander": "^14.0.3",
-    "dotenv": "^17.3.1",
     "jest": "^30.3.0",
     "ts-jest": "^29.4.6",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
-    "zod": "^4.3.6"
+    "tsx": "^4.21.0"
   },
   "dependencies": {
     "@types/express": "^5.0.6",
     "axios": "^1.13.6",
     "cheerio": "^1.2.0",
+    "commander": "^14.0.3",
+    "dotenv": "^17.3.1",
     "express": "^5.2.1",
-    "openai": "^6.32.0"
+    "openai": "^6.32.0",
+    "typescript": "^5.9.3",
+    "zod": "^4.3.6"
   }
 }
