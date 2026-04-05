@@ -20,6 +20,9 @@ export class WebhookServer {
   private registerRoutes() {
     // Standard Observability hook
     this.app.get('/health', (req, res) => res.status(200).send('OK'));
+    
+    // Friendly root route
+    this.app.get('/', (req, res) => res.status(200).send('Voice Receptionist Webhook Server is running securely! 🚀'));
 
     // Primary Booking Action Gateway 
     this.app.post('/api/vapi-webhook', this.verifier.verifySignature, async (req: Request, res: Response) => {
