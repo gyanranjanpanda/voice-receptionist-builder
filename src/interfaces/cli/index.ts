@@ -39,13 +39,67 @@ program
       fs.writeFileSync(path.join(outDir, 'vapi-config.json'), JSON.stringify(result.config, null, 2));
       console.log(`Artifacts saved to: ${outDir}`);
 
+      let assistantIdString = 'YOUR_ASSISTANT_ID_HERE';
+      let vapiKeyString = process.env.VAPI_API_KEY || 'YOUR_PUBLIC_VAPI_KEY_HERE';
+
       if (options.deploy) {
         console.log(`[4/4] 🚀 Deploying to Vapi...`);
         const assistantId = await orchestrator.deploy(result.config);
+        assistantIdString = assistantId;
         console.log(`✅ Deployment successful! Assistant ID: ${assistantId}`);
       } else {
         console.log(`[4/4] ⏭️  Skipping deployment (run with --deploy or deploy manually).`);
       }
+
+      const embedHtml = `
+<!-- AI Voice Receptionist Widget -->
+<script>
+  (function(d, t) {
+    var g = d.createElement(t),
+    s = d.getElementsByTagName(t)[0];
+    g.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
+    g.defer = true;
+    g.async = true;
+    s.parentNode.insertBefore(g, s);
+
+    g.onload = function() {
+      window.vapiSDK.run({
+        apiKey: "${vapiKeyString}",
+        assistant: "${assistantIdString}",
+        config: {
+          position: "bottom-right",
+          offset: "40px",
+          width: "50px",
+          height: "50px",
+          idle: {
+            color: "rgb(46, 204, 113)",
+            type: "pill",
+            title: "Call Receptionist",
+            subtitle: "Talk with our AI",
+            icon: "https://unpkg.com/lucide@latest/icons/phone.svg"
+          },
+          loading: {
+            color: "rgb(241, 196, 15)",
+            type: "pill",
+            title: "Connecting...",
+            subtitle: "Please wait",
+            icon: "https://unpkg.com/lucide@latest/icons/loader-2.svg"
+          },
+          active: {
+            color: "rgb(231, 76, 60)",
+            type: "pill",
+            title: "Call is active...",
+            subtitle: "End the call",
+            icon: "https://unpkg.com/lucide@latest/icons/phone-off.svg"
+          }
+        }
+      });
+    };
+  })(document, "script");
+</script>
+`;
+      fs.writeFileSync(path.join(outDir, 'website-embed.html'), embedHtml.trim());
+      console.log(`✅ Generated website integration snippet at: ${path.join(outDir, 'website-embed.html')}`);
 
     } catch (error: any) {
       console.error(`\n❌ Error during execution: ${error.message}`);
