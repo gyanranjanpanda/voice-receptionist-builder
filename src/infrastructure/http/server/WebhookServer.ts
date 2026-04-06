@@ -27,7 +27,7 @@ export class WebhookServer {
    * Static assets are served first — API routes take precedence via explicit registration.
    */
   private serveSPA(): void {
-    const publicDir = path.resolve(__dirname, '../../../interfaces/http/public');
+    const publicDir = path.resolve(process.cwd(), 'src/interfaces/http/public');
     this.app.use(express.static(publicDir));
   }
 
@@ -36,7 +36,7 @@ export class WebhookServer {
 
     // SPA root — serve index.html for the main UI
     this.app.get('/', (_req, res) => {
-      const publicDir = path.resolve(__dirname, '../../../interfaces/http/public');
+      const publicDir = path.resolve(process.cwd(), 'src/interfaces/http/public');
       res.sendFile(path.join(publicDir, 'index.html'));
     });
 
