@@ -170,20 +170,27 @@
     }
   }
 
+  var ASSISTANT_CONFIG = {
+    name: CLINIC_NAME + ' Receptionist',
+    firstMessage: 'Hi, thanks for calling ' + CLINIC_NAME + '. This is our automated assistant. How can I help you today?',
+    voice: { provider: 'openai', voiceId: 'alloy' },
+    model: {
+      provider: 'openai',
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: SYSTEM_PROMPT
+        }
+      ],
+      tools: TOOL_DEFINITIONS
+    }
+  };
+
   function initVapi() {
     vapiInstance = window.vapiSDK.run({
       apiKey: VAPI_PUBLIC_KEY,
-      assistant: {
-        name: CLINIC_NAME + ' Receptionist',
-        firstMessage: 'Hi, thanks for calling ' + CLINIC_NAME + '. This is our automated assistant. How can I help you today?',
-        voice: { provider: 'openai', voiceId: 'alloy' },
-        model: {
-          provider: 'openai',
-          model: 'gpt-4o-mini',
-          systemPrompt: SYSTEM_PROMPT,
-          tools: TOOL_DEFINITIONS
-        }
-      },
+      assistant: ASSISTANT_CONFIG,
       config: {
         position: 'bottom-right',
         offset: '40px',
@@ -515,8 +522,8 @@
         if (!vapiInstance) {
           initVapi();
         }
-        // Vapi widget auto-starts the call via the SDK
-        // The call-start event will transition us to ACTIVE
+        // Explicitly start the call programmatically since our custom button is driving the UI
+        vapiInstance.start(ASSISTANT_CONFIG);
       });
     });
 
