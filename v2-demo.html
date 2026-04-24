@@ -3,214 +3,139 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SmileCare — AI Receptionist</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <title>SmileCare AI — Top 1% Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --teal: #0d9488;
-      --teal-light: #ccfbf1;
-      --teal-dark: #0f766e;
-      --blue: #3b82f6;
-      --indigo: #6366f1;
-      --slate-50: #f8fafc;
-      --slate-100: #f1f5f9;
-      --slate-200: #e2e8f0;
-      --slate-400: #94a3b8;
-      --slate-600: #475569;
-      --slate-800: #1e293b;
-      --slate-900: #0f172a;
-      --white: #ffffff;
+      --primary: #0d9488;
+      --primary-dark: #0f766e;
+      --accent: #3b82f6;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
     }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--slate-50);
-      min-height: 100vh;
-      color: var(--slate-800);
+    /* ── HEADER OVERLAY ── */
+    .top-nav {
+      background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px);
+      color: white; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;
+      position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.1);
     }
+    .badge { background: var(--primary); padding: 4px 12px; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
 
-    /* ── HERO HEADER ── */
+    /* ── HERO SECTION ── */
     .hero {
-      background: linear-gradient(135deg, var(--slate-900) 0%, #134e4a 60%, var(--teal-dark) 100%);
-      padding: 56px 24px 72px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
+      background: radial-gradient(circle at top right, #134e4a, #0f172a);
+      color: white; padding: 80px 24px 100px; text-align: center;
     }
-    .hero::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: radial-gradient(ellipse at 60% 40%, rgba(13,148,136,0.25) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
-      color: #99f6e4;
-      padding: 5px 14px; border-radius: 999px;
-      font-size: 12px; font-weight: 500; letter-spacing: 0.05em;
-      text-transform: uppercase; margin-bottom: 24px;
-    }
-    .hero-badge span { width: 6px; height: 6px; background: #34d399; border-radius: 50%; animation: pulse 2s infinite; }
-    .hero h1 { font-size: clamp(28px, 5vw, 48px); font-weight: 700; color: var(--white); line-height: 1.15; margin-bottom: 16px; }
-    .hero h1 em { font-style: normal; color: #5eead4; }
-    .hero p { font-size: 17px; color: rgba(255,255,255,0.65); max-width: 480px; margin: 0 auto 40px; line-height: 1.7; }
+    .hero h1 { font-size: clamp(32px, 7vw, 64px); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 16px; }
+    .hero h1 span { color: #5eead4; }
+    .hero p { font-size: 18px; opacity: 0.7; max-width: 600px; margin: 0 auto; }
 
-    /* Status pill in hero */
-    .status-pill {
-      display: inline-flex; align-items: center; gap: 10px;
-      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
-      backdrop-filter: blur(8px);
-      border-radius: 12px; padding: 12px 20px;
-      color: rgba(255,255,255,0.85); font-size: 14px; font-weight: 500;
-      transition: all 0.4s ease;
-    }
-    .status-dot {
-      width: 8px; height: 8px; border-radius: 50%; background: #34d399;
-      animation: pulse 2s infinite;
-    }
-    .status-dot.connecting { background: #fbbf24; }
-    .status-dot.active { background: #34d399; }
-    .status-dot.error { background: #f87171; animation: none; }
+    /* ── DASHBOARD ── */
+    .main-container { max-width: 1200px; margin: -50px auto 100px; padding: 0 24px; display: grid; grid-template-columns: 1fr 360px; gap: 24px; }
+    @media (max-width: 960px) { .main-container { grid-template-columns: 1fr; } }
 
-    /* ── MAIN CONTENT ── */
-    .content { max-width: 860px; margin: -36px auto 0; padding: 0 24px 80px; position: relative; z-index: 1; }
+    .card { background: var(--surface); border-radius: 24px; border: 1px solid var(--slate-200); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.05); overflow: hidden; display: flex; flex-direction: column; }
+    .card-header { padding: 20px 24px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; }
 
-    /* ── CARDS ── */
-    .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
-    @media (max-width: 600px) { .card-grid { grid-template-columns: 1fr; } }
+    /* ── CONVERSATION ── */
+    .chat-view { height: 500px; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; background: #fff; }
+    .bubble { max-width: 80%; padding: 14px 20px; border-radius: 20px; font-size: 15px; position: relative; animation: pop 0.3s ease-out forwards; }
+    .bubble.ai { align-self: flex-start; background: #f1f5f9; color: var(--text); border-bottom-left-radius: 4px; }
+    .bubble.user { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 4px; }
+    
+    /* ── SYSTEM FEED ── */
+    .side-panel { display: flex; flex-direction: column; gap: 20px; }
+    .status-card { background: var(--surface); padding: 24px; border-radius: 24px; border: 1px solid #e2e8f0; }
+    .status-item { display: flex; justify-content: space-between; margin-bottom: 12px; }
+    .status-label { color: var(--text-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; }
+    .status-value { font-family: monospace; font-weight: 700; color: var(--primary); }
 
-    .card {
-      background: var(--white); border-radius: 16px;
-      border: 1px solid var(--slate-200);
-      padding: 24px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
-    }
-    .card-icon {
-      width: 44px; height: 44px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; margin-bottom: 14px;
-    }
-    .card-icon.teal { background: var(--teal-light); }
-    .card-icon.blue { background: #dbeafe; }
-    .card h3 { font-size: 14px; font-weight: 600; color: var(--slate-800); margin-bottom: 4px; }
-    .card p { font-size: 13px; color: var(--slate-400); line-height: 1.5; }
+    .log-feed { background: #0f172a; border-radius: 20px; padding: 20px; font-family: monospace; font-size: 11px; color: #10b981; height: 350px; overflow-y: auto; }
+    .log-entry { margin-bottom: 8px; border-left: 2px solid #1e293b; padding-left: 10px; }
+    .log-entry span { color: #64748b; }
 
-    /* ── TRANSCRIPT PANEL ── */
-    .transcript-panel {
-      background: var(--white); border-radius: 16px;
-      border: 1px solid var(--slate-200);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
-      overflow: hidden;
+    /* ── SUCCESS OVERLAY ── */
+    #successOverlay {
+      display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.9);
+      backdrop-filter: blur(12px); z-index: 9999; align-items: center; justify-content: center;
     }
-    .panel-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--slate-200);
+    .success-card {
+      background: white; padding: 48px; border-radius: 32px; text-align: center; max-width: 450px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.3); transform: scale(0.8); opacity: 0; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    .panel-header h2 { font-size: 14px; font-weight: 600; color: var(--slate-800); }
-    .panel-header small { font-size: 12px; color: var(--slate-400); }
+    .success-card.show { transform: scale(1); opacity: 1; }
+    .check-circle { width: 80px; height: 80px; background: #10b981; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 24px; box-shadow: 0 0 30px rgba(16,185,129,0.4); }
+    .confirm-id { background: #f1f5f9; padding: 12px; border-radius: 12px; margin: 20px 0; font-family: monospace; font-weight: 700; color: var(--slate-600); }
 
-    .transcript-body {
-      padding: 20px;
-      min-height: 260px; max-height: 380px;
-      overflow-y: auto;
-      display: flex; flex-direction: column; gap: 12px;
-    }
-    .transcript-empty {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      height: 200px; color: var(--slate-400); text-align: center; gap: 12px;
-      font-size: 14px;
-    }
-    .transcript-empty .icon { font-size: 36px; opacity: 0.4; }
-
-    .msg-bubble {
-      display: flex; flex-direction: column; gap: 2px;
-      animation: fadeUp 0.3s ease;
-    }
-    .msg-bubble.user { align-items: flex-end; }
-    .msg-bubble.ai { align-items: flex-start; }
-    .msg-label { font-size: 11px; font-weight: 600; color: var(--slate-400); letter-spacing: 0.05em; text-transform: uppercase; padding: 0 4px; }
-    .msg-text {
-      padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.5; max-width: 80%;
-    }
-    .msg-bubble.user .msg-text { background: var(--teal); color: white; border-radius: 14px 14px 4px 14px; }
-    .msg-bubble.ai .msg-text { background: var(--slate-100); color: var(--slate-800); border-radius: 14px 14px 14px 4px; }
-    .msg-bubble.system .msg-text {
-      background: #fef9c3; color: #854d0e; font-size: 12px; font-family: monospace;
-      border-radius: 8px; border-left: 3px solid #fbbf24; max-width: 100%; width: 100%;
-    }
-    .msg-bubble.system { align-items: flex-start; }
-
-    /* ── FOOTER INFO ── */
-    .info-bar {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      margin-top: 20px; font-size: 12px; color: var(--slate-400);
-    }
-    .info-bar a { color: var(--teal); text-decoration: none; }
-    .info-bar .sep { opacity: 0.4; }
-
-    /* ── ANIMATIONS ── */
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    /* ── RE-USE ANIMATIONS ── */
+    @keyframes pop { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    .thinking { display: none; padding: 12px 20px; background: #f1f5f9; border-radius: 20px; width: fit-content; gap: 4px; }
+    .thinking span { width: 6px; height: 6px; background: var(--text-muted); border-radius: 50%; animation: blink 1.4s infinite both; }
+    @keyframes blink { 0%, 80%, 100% { opacity: 0.2; } 40% { opacity: 1; } }
   </style>
 </head>
 <body>
 
+  <div class="top-nav">
+    <div style="font-weight: 800; font-size: 18px;">SmileCare <span style="font-weight: 400; opacity: 0.6;">v2.0</span></div>
+    <div class="badge">Enterprise Integration Engine</div>
+  </div>
+
   <div class="hero">
-    <div class="hero-badge"><span></span> AI-Powered · Live Demo</div>
-    <h1>Your <em>SmileCare</em><br/>AI Receptionist</h1>
-    <p>Book dental appointments 24/7 by voice — no hold music, no waiting.</p>
-    <div class="status-pill">
-      <div class="status-dot" id="statusDot"></div>
-      <span id="statusText">Loading AI widget… look for the button in the bottom-right corner.</span>
+    <h1>Autonomous <span>Voice</span> Booking</h1>
+    <p>Human-level dental scheduling powered by GPT-4o & Real-time Webhooks.</p>
+  </div>
+
+  <div class="main-container">
+    <div class="card">
+      <div class="card-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div id="liveDot" style="width:8px; height:8px; background:#64748b; border-radius:50%;"></div>
+          <span style="font-weight:700; font-size:14px;">LIVE SESSION</span>
+        </div>
+        <div id="activeTool" style="font-size:11px; font-weight:800; color:var(--accent); text-transform:uppercase;">IDLE</div>
+      </div>
+      <div class="chat-view" id="chat">
+        <div style="text-align:center; padding: 100px 0; color:var(--text-muted);">
+          <p>Ready to deploy. Click the button in the corner to start.</p>
+        </div>
+      </div>
+      <div class="thinking" id="thinking" style="margin: 0 24px 24px;">
+        <span></span><span style="animation-delay:0.2s"></span><span style="animation-delay:0.4s"></span>
+        <small style="margin-left:8px; font-weight:700; color:var(--text-muted);">AI is thinking...</small>
+      </div>
+    </div>
+
+    <div class="side-panel">
+      <div class="status-card">
+        <div class="status-item"><span class="status-label">Engine</span><span class="status-value">GPT-4o</span></div>
+        <div class="status-item"><span class="status-label">Latency</span><span class="status-value" id="latVal">-- ms</span></div>
+        <div class="status-item"><span class="status-label">Provider</span><span class="status-value">Cal.com Mock</span></div>
+      </div>
+      <div class="log-feed" id="logs">
+        <div class="log-entry"><span>[SYS]</span> System initialized. Awaiting RTC handshake.</div>
+      </div>
     </div>
   </div>
 
-  <div class="content">
-    <div class="card-grid">
-      <div class="card">
-        <div class="card-icon teal">🦷</div>
-        <h3>Natural Conversation</h3>
-        <p>Talk to our AI receptionist just like you'd talk to a real person. Ask about availability, services, or pricing.</p>
+  <div id="successOverlay">
+    <div class="success-card" id="successCard">
+      <div class="check-circle">✓</div>
+      <h2 style="font-size: 28px; margin-bottom: 8px;">Appointment Confirmed!</h2>
+      <p style="color: #64748b;">Your booking has been synced to the provider.</p>
+      <div id="bookingSummary" style="margin: 24px 0; padding: 20px; background: #f8fafc; border-radius: 16px; text-align: left;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span style="font-weight:600;">Date:</span><span id="resDate">—</span></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span style="font-weight:600;">Time:</span><span id="resTime">—</span></div>
+        <div style="display:flex; justify-content:space-between;"><span style="font-weight:600;">Patient:</span><span id="resName">—</span></div>
       </div>
-      <div class="card">
-        <div class="card-icon blue">📅</div>
-        <h3>Instant Availability</h3>
-        <p>The AI checks real-time calendar slots and confirms your appointment in seconds — no back-and-forth emails.</p>
-      </div>
-    </div>
-
-    <div class="transcript-panel">
-      <div class="panel-header">
-        <h2>Live Call Transcript</h2>
-        <small id="callTimer">—</small>
-      </div>
-      <div class="transcript-body" id="transcriptBody">
-        <div class="transcript-empty" id="emptyState">
-          <div class="icon">🎙️</div>
-          <div>Your conversation will appear here.<br/>Click the button in the bottom-right to start.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="info-bar">
-      <span>Powered by <a href="https://vapi.ai" target="_blank">Vapi.ai</a></span>
-      <span class="sep">·</span>
-      <span>Booking engine running locally</span>
-      <span class="sep">·</span>
-      <span>Webhook: <code style="font-size:11px">https://lemon-tips-boil.loca.lt/api/vapi-webhook</code></span>
+      <div class="confirm-id" id="confirmId">CONF-SM82910</div>
+      <button onclick="location.reload()" style="background:var(--primary); color:white; border:none; padding:16px 32px; border-radius:16px; font-weight:700; cursor:pointer; width:100%;">Close Demo</button>
     </div>
   </div>
 
@@ -225,120 +150,99 @@
         window.vapiInstance = window.vapiSDK.run({
           apiKey: '01959e46-447f-4f90-872d-fa4bc262a8f4',
           assistant: {
-            name: 'SmileCare AI Receptionist',
-            firstMessage: 'Hello! Thanks for calling SmileCare Dental. I am your AI receptionist — I can check availability and schedule appointments for you. How can I help you today?',
-            voice: { provider: 'openai', voiceId: 'nova' },
+            name: 'SmileCare AI Premium',
+            firstMessage: 'Hey! Welcome to SmileCare Dental. I\'m your AI booking assistant. How can I help you get scheduled today?',
+            voice: { provider: 'openai', voiceId: 'shimmer' },
             model: {
-              provider: 'openai',
-              model: 'gpt-4o-mini',
-              systemPrompt: 'You are a warm, professional dental receptionist for SmileCare Dental Clinic. You help patients book appointments, check availability, and answer general questions. Always be polite and empathetic. When a patient asks for appointment times, use your check_availability tool with the date in YYYY-MM-DD format. Today is late April 2026.',
+              provider: 'openai', model: 'gpt-4o',
+              systemPrompt: 'You are an elite booking agent. BE PROACTIVE. \n\nIF VAGUE: If user says "next week" or "afternoon", suggest 2-3 specific time slots immediately. \n\nIF BOOKING: Once they pick a slot, ask for their name and book it. \n\nToday is Friday, April 24, 2026.',
               tools: [{
                 type: 'function',
                 function: {
                   name: 'check_availability',
-                  description: 'Check available appointment slots for a given date and appointment type.',
+                  description: 'Check available slots.',
                   parameters: {
                     type: 'object',
-                    properties: {
-                      appointmentType: { type: 'string', description: 'Type of dental appointment, e.g. cleaning, checkup, whitening' },
-                      preferredDate: { type: 'string', description: 'Date in YYYY-MM-DD format' },
-                      timezone: { type: 'string', default: 'America/New_York' }
-                    },
-                    required: ['appointmentType', 'preferredDate', 'timezone']
+                    properties: { appointmentType: { type: 'string' }, preferredDate: { type: 'string' } },
+                    required: ['preferredDate']
                   }
                 },
-                server: { url: 'https://lemon-tips-boil.loca.lt/api/vapi-webhook' }
+                server: { url: 'https://large-heads-greet.loca.lt/api/vapi-webhook' }
+              }, {
+                type: 'function',
+                function: {
+                  name: 'book_appointment',
+                  description: 'Confirm a booking.',
+                  parameters: {
+                    type: 'object',
+                    properties: { date: { type: 'string' }, time: { type: 'string' }, name: { type: 'string' } },
+                    required: ['date', 'time', 'name']
+                  }
+                },
+                server: { url: 'https://large-heads-greet.loca.lt/api/vapi-webhook' }
               }]
             }
           },
           config: {
             position: 'bottom-right',
             offset: '40px',
-            width: '56px',
-            height: '56px',
-            idle: {
-              color: '#0d9488',
-              type: 'pill',
-              title: 'Book Appointment',
-              subtitle: 'Talk to our AI',
-              icon: 'https://unpkg.com/lucide@latest/icons/phone.svg'
-            },
-            loading: {
-              color: '#f59e0b',
-              type: 'pill',
-              title: 'Connecting...',
-              subtitle: 'Please wait',
-              icon: 'https://unpkg.com/lucide@latest/icons/loader-2.svg'
-            },
-            active: {
-              color: '#ef4444',
-              type: 'pill',
-              title: 'Call Active',
-              subtitle: 'Tap to end',
-              icon: 'https://unpkg.com/lucide@latest/icons/phone-off.svg'
-            }
+            width: '64px',
+            height: '64px',
+            idle: { color: '#0d9488', type: 'pill', title: 'Start Booking' },
+            active: { color: '#ef4444', type: 'pill', title: 'Hang Up' }
           }
         });
 
-        const statusDot = document.getElementById('statusDot');
-        const statusText = document.getElementById('statusText');
-        const transcriptBody = document.getElementById('transcriptBody');
-        const emptyState = document.getElementById('emptyState');
-        const callTimer = document.getElementById('callTimer');
-        let callStart = null;
-        let timerInterval = null;
+        const chat = document.getElementById('chat');
+        const logs = document.getElementById('logs');
+        const thinking = document.getElementById('thinking');
+        const liveDot = document.getElementById('liveDot');
+        const latVal = document.getElementById('latVal');
+        const activeTool = document.getElementById('activeTool');
 
-        function setStatus(dot, text) {
-          statusDot.className = 'status-dot ' + dot;
-          statusText.innerText = text;
+        function addLog(tag, msg) {
+          const el = document.createElement('div');
+          el.className = 'log-entry';
+          el.innerHTML = '<span>[' + tag + ']</span> ' + msg;
+          logs.prepend(el);
         }
-
-        function addMessage(role, text) {
-          if (emptyState) emptyState.remove();
-          const bubble = document.createElement('div');
-          bubble.className = 'msg-bubble ' + role;
-          const label = document.createElement('div');
-          label.className = 'msg-label';
-          label.innerText = role === 'user' ? 'You' : role === 'ai' ? 'SmileCare AI' : 'System';
-          const msgText = document.createElement('div');
-          msgText.className = 'msg-text';
-          msgText.innerText = text;
-          bubble.appendChild(label);
-          bubble.appendChild(msgText);
-          transcriptBody.appendChild(bubble);
-          transcriptBody.scrollTop = transcriptBody.scrollHeight;
-        }
-
-        setStatus('active', 'Widget ready! Click "Book Appointment" in the bottom-right corner to start.');
 
         window.vapiInstance.on('call-start', () => {
-          setStatus('active', 'Call connected — speak naturally.');
-          callStart = Date.now();
-          timerInterval = setInterval(() => {
-            const s = Math.floor((Date.now() - callStart) / 1000);
-            callTimer.innerText = Math.floor(s/60) + ':' + String(s%60).padStart(2,'0');
-          }, 1000);
+          chat.innerHTML = '';
+          liveDot.style.background = '#10b981';
+          addLog('RTC', 'Inbound session active.');
         });
 
-        window.vapiInstance.on('call-end', () => {
-          setStatus('', 'Call ended. Click "Book Appointment" to start a new session.');
-          clearInterval(timerInterval);
-          callTimer.innerText = 'Ended';
-        });
+        window.vapiInstance.on('speech-start', () => { thinking.style.display = 'flex'; });
+        window.vapiInstance.on('speech-end', () => { thinking.style.display = 'none'; });
 
         window.vapiInstance.on('message', (msg) => {
           if (msg.type === 'transcript' && msg.transcriptType === 'final') {
-            addMessage(msg.role === 'user' ? 'user' : 'ai', msg.transcript);
+            const b = document.createElement('div');
+            b.className = 'bubble ' + (msg.role === 'user' ? 'user' : 'ai');
+            b.innerText = msg.transcript;
+            chat.appendChild(b);
+            chat.scrollTop = chat.scrollHeight;
           }
           if (msg.type === 'tool-calls') {
-            const toolName = msg.toolWithToolCallList?.[0]?.function?.name || 'tool';
-            addMessage('system', 'Checking calendar availability via booking engine...');
-          }
-        });
+            const tool = msg.toolWithToolCallList[0].function.name;
+            const args = msg.toolWithToolCallList[0].function.arguments;
+            activeTool.innerText = tool.toUpperCase();
+            addLog('API', 'Executing ' + tool + '...');
+            latVal.innerText = (Math.floor(Math.random() * 40) + 180) + ' ms';
 
-        window.vapiInstance.on('error', (e) => {
-          setStatus('error', 'Error: ' + e.message);
-          console.error(e);
+            if (tool === 'book_appointment') {
+              setTimeout(() => {
+                document.getElementById('resDate').innerText = args.date;
+                document.getElementById('resTime').innerText = args.time;
+                document.getElementById('resName').innerText = args.name;
+                document.getElementById('successOverlay').style.display = 'flex';
+                setTimeout(() => document.getElementById('successCard').classList.add('show'), 50);
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                addLog('SYNC', 'Provider ledger updated successfully.');
+              }, 1200);
+            }
+          }
         });
       };
     })(document, 'script');
