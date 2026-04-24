@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Receptionist — Bright Smile Dental</title>
+  <meta name="description" content="AI-powered voice receptionist for Bright Smile Dental. Book appointments, get clinic information, and more.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦷</text></svg>">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- Navigation -->
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+      <div class="navbar-inner">
+        <div class="navbar-brand">
+          <span class="navbar-brand-icon">🦷</span>
+          <div class="navbar-brand-text">
+            <span class="navbar-brand-title" id="clinic-name-header">Bright Smile Dental</span>
+            <span class="navbar-brand-subtitle">AI Voice Receptionist</span>
+          </div>
+        </div>
+        <div class="navbar-nav">
+          <a href="#" class="navbar-nav-link active" data-view="receptionist" id="nav-receptionist">Receptionist</a>
+          <a href="#" class="navbar-nav-link" data-view="dashboard" id="nav-dashboard">Dashboard</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- AI Disclosure Banner -->
+    <div class="disclosure-banner" id="disclosure-banner">
+      <span>ℹ️</span> This is an automated AI assistant for <strong id="clinic-name-banner">Bright Smile Dental</strong>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- RECEPTIONIST VIEW                              -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <main class="view active" id="view-receptionist">
+      <div class="container">
+
+        <!-- Call Interface Card -->
+        <div class="call-card" id="call-card">
+
+          <!-- STATE: Idle — ready to start a call -->
+          <div class="call-state active" id="state-idle">
+            <div class="call-button-wrapper">
+              <div class="call-pulse-ring"></div>
+              <div class="call-pulse-ring"></div>
+              <button class="call-button" id="btn-start-call" aria-label="Start call">
+                📞
+              </button>
+            </div>
+            <p class="call-status-text">Tap to call the receptionist</p>
+          </div>
+
+          <!-- STATE: Connecting -->
+          <div class="call-state" id="state-connecting">
+            <div class="connecting-dots">
+              <div class="connecting-dot"></div>
+              <div class="connecting-dot"></div>
+              <div class="connecting-dot"></div>
+            </div>
+            <p class="call-status-text">Connecting...</p>
+          </div>
+
+          <!-- STATE: Active call -->
+          <div class="call-state" id="state-active">
+            <p class="call-status-text">● Call in progress</p>
+            <div class="call-timer" id="call-timer">0:00</div>
+            <div class="waveform" id="waveform">
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+            </div>
+            <button class="end-call-button" id="btn-end-call">End Call</button>
+          </div>
+
+          <!-- STATE: Call ended -->
+          <div class="call-state" id="state-ended">
+            <p class="call-status-text" style="color: var(--color-text-secondary);">Call ended</p>
+            <p style="font-size:14px; color:var(--color-text-muted); margin-top:8px;" id="call-duration-summary"></p>
+            <button class="call-button" id="btn-new-call" aria-label="Start new call" style="margin-top:24px; width:64px; height:64px; font-size:24px;">
+              📞
+            </button>
+            <p class="call-status-text" style="margin-top:12px;">Start a new call</p>
+          </div>
+
+        </div>
+
+        <!-- Transcript Panel -->
+        <div class="transcript-card" id="transcript-card">
+          <div class="transcript-header">
+            <h3>Conversation</h3>
+            <span class="transcript-badge inactive" id="transcript-badge">Waiting</span>
+          </div>
+          <div class="transcript-body" id="transcript-body">
+            <div class="transcript-empty" id="transcript-empty">
+              <div class="transcript-empty-icon">💬</div>
+              Start a call to see the conversation here
+            </div>
+          </div>
+        </div>
+
+        <!-- Booking Confirmation Card (appears after successful booking) -->
+        <div class="confirmation-card hidden" id="confirmation-card">
+          <div class="confirmation-icon">✓</div>
+          <h2 class="confirmation-title">Appointment Booked</h2>
+          <p class="confirmation-subtitle">Your appointment has been confirmed</p>
+          <div class="confirmation-details" id="confirmation-details">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- DASHBOARD VIEW                                 -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <main class="view" id="view-dashboard">
+      <div class="dashboard-grid">
+
+        <!-- Stats Row -->
+        <div class="dashboard-stats" id="dashboard-stats">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-calls">—</div>
+            <div class="stat-label">Total Calls</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-appointments">—</div>
+            <div class="stat-label">Appointments</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-leads">—</div>
+            <div class="stat-label">Follow-ups</div>
+          </div>
+        </div>
+
+        <!-- Appointments Table -->
+        <div class="data-card">
+          <div class="data-card-header">
+            <h3>📅 Booked Appointments</h3>
+            <button class="refresh-btn" id="btn-refresh-appointments">Refresh</button>
+          </div>
+          <div class="data-card-body" id="appointments-body">
+            <div class="data-empty">No appointments yet. Book one using the receptionist!</div>
+          </div>
+        </div>
+
+        <!-- Leads Table -->
+        <div class="data-card">
+          <div class="data-card-header">
+            <h3>📋 Follow-up Leads</h3>
+            <button class="refresh-btn" id="btn-refresh-leads">Refresh</button>
+          </div>
+          <div class="data-card-body" id="leads-body">
+            <div class="data-empty">No follow-up leads captured yet.</div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Vapi SDK -->
+  <script src="https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js" defer></script>
+  <script src="/app.js" defer></script>
+</body>
+</html>

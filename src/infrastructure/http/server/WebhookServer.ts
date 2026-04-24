@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import path from 'path';
+import fs from 'fs';
 import { VapiWebhookVerifier } from '../../vapi/VapiWebhookVerifier';
 import { CheckAvailability } from '../../../application/use-cases/CheckAvailability';
 import { ConfirmAppointmentBooking } from '../../../application/use-cases/ConfirmAppointmentBooking';
@@ -27,7 +28,11 @@ export class WebhookServer {
    * Static assets are served first — API routes take precedence via explicit registration.
    */
   private serveSPA(): void {
-    const publicDir = path.resolve(process.cwd(), 'src/interfaces/http/public');
+    // Try root public first (for Vercel/Production), then fallback to src path
+    let publicDir = path.resolve(process.cwd(), 'public');
+    if (!fs.existsSync(publicDir)) {
+      publicDir = path.resolve(process.cwd(), 'src/interfaces/http/public');
+    }
     this.app.use(express.static(publicDir));
   }
 

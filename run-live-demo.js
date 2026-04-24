@@ -3,135 +3,382 @@ const fs = require('fs');
 const localtunnel = require('localtunnel');
 
 (async () => {
-  console.log('Booting Webhook Booking Gateway natively on port 3000...');
-  const serverProc = spawn('npx', ['tsx', 'src/interfaces/cli/index.ts', 'serve', '--provider', 'mock', '--port', '3000']);
+  console.log('Booting Webhook Booking Gateway on port 3000...');
+  spawn('npx', ['tsx', 'src/interfaces/cli/index.ts', 'serve', '--provider', 'mock', '--port', '3000']);
   
-  console.log('Opening secure HTTPS tunnel for Vapi Webhook traffic...');
+  console.log('Opening HTTPS tunnel for Vapi Webhook traffic...');
   try {
     const tunnel = await localtunnel({ port: 3000 });
-    tunnel.on('error', err => console.error('[TUNNEL WARN] Upstream connection bounce securely caught:', err.message));
+    tunnel.on('error', err => console.error('[TUNNEL WARN]', err.message));
     
-    console.log(`[TUNNEL] Endpoint bound at: ${tunnel.url}/api/vapi-webhook`);
+    console.log(`[TUNNEL] Live at: ${tunnel.url}/api/vapi-webhook`);
 
     const vapiKey = "01959e46-447f-4f90-872d-fa4bc262a8f4";
+    const webhookUrl = tunnel.url + "/api/vapi-webhook";
 
-    const htmlArr = [
-      "<!DOCTYPE html>",
-      "<html lang='en'>",
-      "<head>",
-      "    <meta charset='UTF-8'>",
-      "    <title>AI Voice Receptionist (Live Booking V2)</title>",
-      "    <style>",
-      "        body { font-family: -apple-system, sans-serif; max-width: 800px; margin: 40px auto; text-align: center; }",
-      "        .status { margin-top: 20px; color: #666; font-size: 18px; }",
-      "        .terminal { background: #111; color: #0f0; padding: 20px; border-radius: 5px; font-family: monospace; text-align: left; margin-top: 30px; min-height: 200px; white-space: pre-wrap; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }",
-      "    </style>",
-      "</head>",
-      "<body>",
-      "    <h1>Live AI Voice Receptionist Demo</h1>",
-      "    <p>Vapi is actively proxying internet tool calls to your exact local machine securely via: <br><b>" + tunnel.url + "/api/vapi-webhook</b></p>",
-      "    ",
-      "    <div class='status' id='statusMessage'>Initializing secure widget... Look for the button in the bottom right!</div>",
-      "    <div class='terminal' id='transcriptLog'>Call Transcript Log:</div>",
-      "",
-      "    <script>",
-      "        (function(d, t) {",
-      "          var g = d.createElement(t),",
-      "          s = d.getElementsByTagName(t)[0];",
-      "          g.src = 'https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js';",
-      "          g.defer = true;",
-      "          g.async = true;",
-      "          s.parentNode.insertBefore(g, s);",
-      "",
-      "          g.onload = function() {",
-      "            window.vapiInstance = window.vapiSDK.run({",
-      "              apiKey: '" + vapiKey + "',",
-      "              assistant: {",
-      "                  name: 'Robotic Dental Receptionist',",
-      "                  firstMessage: 'Hello! Thanks for calling the Dental Clinic. Would you like me to check what availability we have?',",
-      "                  voice: { provider: 'openai', voiceId: 'alloy' },",
-      "                  model: {",
-      "                      provider: 'openai',",
-      "                      model: 'gpt-4o-mini',",
-      "                      systemPrompt: 'You are a professional dental receptionist. You help callers book appointments. Assume today\\'s date revolves around late March 2026. If the user asks for times, STRICTLY use your check_availability tool. Ensure you provide preferredDate string exactly as YYYY-MM-DD (e.g., 2026-03-25). ONLY read back the resulting times the system outputs natively. If they ask to hold or confirm, pretend you can, but primarily simulate the check_availability layer first.',",
-      "                      tools: [",
-      "                          {",
-      "                              type: 'function',",
-      "                              function: {",
-      "                                  name: 'check_availability',",
-      "                                  description: 'Check strictly isolated local appointment slots securely against the Webhook gateway.',",
-      "                                  parameters: {",
-      "                                      type: 'object',",
-      "                                      properties: {",
-      "                                          appointmentType: { type: 'string' },",
-      "                                          preferredDate: { type: 'string', description: 'Strict format: YYYY-MM-DD' },",
-      "                                          timezone: { type: 'string', default: 'America/New_York' }",
-      "                                      },",
-      "                                      required: ['appointmentType', 'preferredDate', 'timezone']",
-      "                                  }",
-      "                              },",
-      "                              server: {",
-      "                                  url: '" + tunnel.url + "/api/vapi-webhook'",
-      "                              }",
-      "                          }",
-      "                      ]",
-      "                  }",
-      "              },",
-      "              config: {",
-      "                position: 'bottom-right',",
-      "                offset: '40px',",
-      "                width: '50px',",
-      "                height: '50px'",
-      "              }",
-      "            });",
-      "",
-      "            const statusEl = d.getElementById('statusMessage');",
-      "            const transcriptLog = d.getElementById('transcriptLog');",
-      "            statusEl.innerText = 'Widget online! Click the green button in the corner to start the call.';",
-      "",
-      "            window.vapiInstance.on('call-start', () => {",
-      "                statusEl.innerText = 'Connected! Speak securely into your microphone to trigger the local engine.';",
-      "            });",
-      "",
-      "            window.vapiInstance.on('call-end', () => {",
-      "                statusEl.innerText = 'Call gracefully closed.';",
-      "            });",
-      "",
-      "            window.vapiInstance.on('message', (msg) => {",
-      "                const nl = String.fromCharCode(10);",
-      "                if (msg.type === 'transcript' && msg.transcriptType === 'final') {",
-      "                    transcriptLog.innerText += nl + nl + '[' + (msg.role === 'user' ? 'You' : 'AI') + ']: ' + msg.transcript;",
-      "                    transcriptLog.scrollTop = transcriptLog.scrollHeight;",
-      "                }",
-      "                if (msg.type === 'tool-calls') {",
-      "                    transcriptLog.innerText += nl + nl + '[SYSTEM - SECURITY]: Routing strict intent intercept via Local Webhook: ' + nl + JSON.stringify(msg.toolWithToolCallList, null, 2);",
-      "                    transcriptLog.scrollTop = transcriptLog.scrollHeight;",
-      "                }",
-      "            });",
-      "",
-      "            window.vapiInstance.on('error', (e) => {",
-      "                statusEl.innerText = 'Framework Error: ' + e.message;",
-      "                console.error(e);",
-      "            });",
-      "          };",
-      "        })(document, 'script');",
-      "    </script>",
-      "</body>",
-      "</html>"
-    ];
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmileCare — AI Receptionist</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    fs.writeFileSync('v2-demo.html', htmlArr.join(''));
-    console.log('✅ Generated v2-demo.html successfully injected with Floating Widget components.');
+    :root {
+      --teal: #0d9488;
+      --teal-light: #ccfbf1;
+      --teal-dark: #0f766e;
+      --blue: #3b82f6;
+      --indigo: #6366f1;
+      --slate-50: #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-400: #94a3b8;
+      --slate-600: #475569;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+      --white: #ffffff;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--slate-50);
+      min-height: 100vh;
+      color: var(--slate-800);
+    }
+
+    /* ── HERO HEADER ── */
+    .hero {
+      background: linear-gradient(135deg, var(--slate-900) 0%, #134e4a 60%, var(--teal-dark) 100%);
+      padding: 56px 24px 72px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 60% 40%, rgba(13,148,136,0.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #99f6e4;
+      padding: 5px 14px; border-radius: 999px;
+      font-size: 12px; font-weight: 500; letter-spacing: 0.05em;
+      text-transform: uppercase; margin-bottom: 24px;
+    }
+    .hero-badge span { width: 6px; height: 6px; background: #34d399; border-radius: 50%; animation: pulse 2s infinite; }
+    .hero h1 { font-size: clamp(28px, 5vw, 48px); font-weight: 700; color: var(--white); line-height: 1.15; margin-bottom: 16px; }
+    .hero h1 em { font-style: normal; color: #5eead4; }
+    .hero p { font-size: 17px; color: rgba(255,255,255,0.65); max-width: 480px; margin: 0 auto 40px; line-height: 1.7; }
+
+    /* Status pill in hero */
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      backdrop-filter: blur(8px);
+      border-radius: 12px; padding: 12px 20px;
+      color: rgba(255,255,255,0.85); font-size: 14px; font-weight: 500;
+      transition: all 0.4s ease;
+    }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #34d399;
+      animation: pulse 2s infinite;
+    }
+    .status-dot.connecting { background: #fbbf24; }
+    .status-dot.active { background: #34d399; }
+    .status-dot.error { background: #f87171; animation: none; }
+
+    /* ── MAIN CONTENT ── */
+    .content { max-width: 860px; margin: -36px auto 0; padding: 0 24px 80px; position: relative; z-index: 1; }
+
+    /* ── CARDS ── */
+    .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    @media (max-width: 600px) { .card-grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--white); border-radius: 16px;
+      border: 1px solid var(--slate-200);
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    }
+    .card-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; margin-bottom: 14px;
+    }
+    .card-icon.teal { background: var(--teal-light); }
+    .card-icon.blue { background: #dbeafe; }
+    .card h3 { font-size: 14px; font-weight: 600; color: var(--slate-800); margin-bottom: 4px; }
+    .card p { font-size: 13px; color: var(--slate-400); line-height: 1.5; }
+
+    /* ── TRANSCRIPT PANEL ── */
+    .transcript-panel {
+      background: var(--white); border-radius: 16px;
+      border: 1px solid var(--slate-200);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+      overflow: hidden;
+    }
+    .panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--slate-200);
+    }
+    .panel-header h2 { font-size: 14px; font-weight: 600; color: var(--slate-800); }
+    .panel-header small { font-size: 12px; color: var(--slate-400); }
+
+    .transcript-body {
+      padding: 20px;
+      min-height: 260px; max-height: 380px;
+      overflow-y: auto;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .transcript-empty {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 200px; color: var(--slate-400); text-align: center; gap: 12px;
+      font-size: 14px;
+    }
+    .transcript-empty .icon { font-size: 36px; opacity: 0.4; }
+
+    .msg-bubble {
+      display: flex; flex-direction: column; gap: 2px;
+      animation: fadeUp 0.3s ease;
+    }
+    .msg-bubble.user { align-items: flex-end; }
+    .msg-bubble.ai { align-items: flex-start; }
+    .msg-label { font-size: 11px; font-weight: 600; color: var(--slate-400); letter-spacing: 0.05em; text-transform: uppercase; padding: 0 4px; }
+    .msg-text {
+      padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.5; max-width: 80%;
+    }
+    .msg-bubble.user .msg-text { background: var(--teal); color: white; border-radius: 14px 14px 4px 14px; }
+    .msg-bubble.ai .msg-text { background: var(--slate-100); color: var(--slate-800); border-radius: 14px 14px 14px 4px; }
+    .msg-bubble.system .msg-text {
+      background: #fef9c3; color: #854d0e; font-size: 12px; font-family: monospace;
+      border-radius: 8px; border-left: 3px solid #fbbf24; max-width: 100%; width: 100%;
+    }
+    .msg-bubble.system { align-items: flex-start; }
+
+    /* ── FOOTER INFO ── */
+    .info-bar {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 20px; font-size: 12px; color: var(--slate-400);
+    }
+    .info-bar a { color: var(--teal); text-decoration: none; }
+    .info-bar .sep { opacity: 0.4; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hero">
+    <div class="hero-badge"><span></span> AI-Powered · Live Demo</div>
+    <h1>Your <em>SmileCare</em><br/>AI Receptionist</h1>
+    <p>Book dental appointments 24/7 by voice — no hold music, no waiting.</p>
+    <div class="status-pill">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Loading AI widget… look for the button in the bottom-right corner.</span>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon teal">🦷</div>
+        <h3>Natural Conversation</h3>
+        <p>Talk to our AI receptionist just like you'd talk to a real person. Ask about availability, services, or pricing.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon blue">📅</div>
+        <h3>Instant Availability</h3>
+        <p>The AI checks real-time calendar slots and confirms your appointment in seconds — no back-and-forth emails.</p>
+      </div>
+    </div>
+
+    <div class="transcript-panel">
+      <div class="panel-header">
+        <h2>Live Call Transcript</h2>
+        <small id="callTimer">—</small>
+      </div>
+      <div class="transcript-body" id="transcriptBody">
+        <div class="transcript-empty" id="emptyState">
+          <div class="icon">🎙️</div>
+          <div>Your conversation will appear here.<br/>Click the button in the bottom-right to start.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-bar">
+      <span>Powered by <a href="https://vapi.ai" target="_blank">Vapi.ai</a></span>
+      <span class="sep">·</span>
+      <span>Booking engine running locally</span>
+      <span class="sep">·</span>
+      <span>Webhook: <code style="font-size:11px">${webhookUrl}</code></span>
+    </div>
+  </div>
+
+  <script>
+    (function(d, t) {
+      var g = d.createElement(t), s = d.getElementsByTagName(t)[0];
+      g.src = 'https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js';
+      g.defer = true; g.async = true;
+      s.parentNode.insertBefore(g, s);
+
+      g.onload = function() {
+        window.vapiInstance = window.vapiSDK.run({
+          apiKey: '${vapiKey}',
+          assistant: {
+            name: 'SmileCare AI Receptionist',
+            firstMessage: 'Hello! Thanks for calling SmileCare Dental. I am your AI receptionist — I can check availability and schedule appointments for you. How can I help you today?',
+            voice: { provider: 'openai', voiceId: 'nova' },
+            model: {
+              provider: 'openai',
+              model: 'gpt-4o-mini',
+              systemPrompt: 'You are a warm, professional dental receptionist for SmileCare Dental Clinic. You help patients book appointments, check availability, and answer general questions. Always be polite and empathetic. When a patient asks for appointment times, use your check_availability tool with the date in YYYY-MM-DD format. Today is late April 2026.',
+              tools: [{
+                type: 'function',
+                function: {
+                  name: 'check_availability',
+                  description: 'Check available appointment slots for a given date and appointment type.',
+                  parameters: {
+                    type: 'object',
+                    properties: {
+                      appointmentType: { type: 'string', description: 'Type of dental appointment, e.g. cleaning, checkup, whitening' },
+                      preferredDate: { type: 'string', description: 'Date in YYYY-MM-DD format' },
+                      timezone: { type: 'string', default: 'America/New_York' }
+                    },
+                    required: ['appointmentType', 'preferredDate', 'timezone']
+                  }
+                },
+                server: { url: '${webhookUrl}' }
+              }]
+            }
+          },
+          config: {
+            position: 'bottom-right',
+            offset: '40px',
+            width: '56px',
+            height: '56px',
+            idle: {
+              color: '#0d9488',
+              type: 'pill',
+              title: 'Book Appointment',
+              subtitle: 'Talk to our AI',
+              icon: 'https://unpkg.com/lucide@latest/icons/phone.svg'
+            },
+            loading: {
+              color: '#f59e0b',
+              type: 'pill',
+              title: 'Connecting...',
+              subtitle: 'Please wait',
+              icon: 'https://unpkg.com/lucide@latest/icons/loader-2.svg'
+            },
+            active: {
+              color: '#ef4444',
+              type: 'pill',
+              title: 'Call Active',
+              subtitle: 'Tap to end',
+              icon: 'https://unpkg.com/lucide@latest/icons/phone-off.svg'
+            }
+          }
+        });
+
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const transcriptBody = document.getElementById('transcriptBody');
+        const emptyState = document.getElementById('emptyState');
+        const callTimer = document.getElementById('callTimer');
+        let callStart = null;
+        let timerInterval = null;
+
+        function setStatus(dot, text) {
+          statusDot.className = 'status-dot ' + dot;
+          statusText.innerText = text;
+        }
+
+        function addMessage(role, text) {
+          if (emptyState) emptyState.remove();
+          const bubble = document.createElement('div');
+          bubble.className = 'msg-bubble ' + role;
+          const label = document.createElement('div');
+          label.className = 'msg-label';
+          label.innerText = role === 'user' ? 'You' : role === 'ai' ? 'SmileCare AI' : 'System';
+          const msgText = document.createElement('div');
+          msgText.className = 'msg-text';
+          msgText.innerText = text;
+          bubble.appendChild(label);
+          bubble.appendChild(msgText);
+          transcriptBody.appendChild(bubble);
+          transcriptBody.scrollTop = transcriptBody.scrollHeight;
+        }
+
+        setStatus('active', 'Widget ready! Click "Book Appointment" in the bottom-right corner to start.');
+
+        window.vapiInstance.on('call-start', () => {
+          setStatus('active', 'Call connected — speak naturally.');
+          callStart = Date.now();
+          timerInterval = setInterval(() => {
+            const s = Math.floor((Date.now() - callStart) / 1000);
+            callTimer.innerText = Math.floor(s/60) + ':' + String(s%60).padStart(2,'0');
+          }, 1000);
+        });
+
+        window.vapiInstance.on('call-end', () => {
+          setStatus('', 'Call ended. Click "Book Appointment" to start a new session.');
+          clearInterval(timerInterval);
+          callTimer.innerText = 'Ended';
+        });
+
+        window.vapiInstance.on('message', (msg) => {
+          if (msg.type === 'transcript' && msg.transcriptType === 'final') {
+            addMessage(msg.role === 'user' ? 'user' : 'ai', msg.transcript);
+          }
+          if (msg.type === 'tool-calls') {
+            const toolName = msg.toolWithToolCallList?.[0]?.function?.name || 'tool';
+            addMessage('system', 'Checking calendar availability via booking engine...');
+          }
+        });
+
+        window.vapiInstance.on('error', (e) => {
+          setStatus('error', 'Error: ' + e.message);
+          console.error(e);
+        });
+      };
+    })(document, 'script');
+  </script>
+</body>
+</html>`;
+
+    fs.writeFileSync('v2-demo.html', html);
+    console.log('✅ Generated stunning v2-demo.html.');
     
-    console.log('\\n🚀 Deploying isolated UI simulation server locally bound natively to port 8005...');
     const pyServer = spawn('python3', ['-m', 'http.server', '8005']);
+    pyServer.stderr.on('data', d => {
+      const msg = d.toString().trim();
+      if (!msg.includes('Address already in use')) process.stderr.write(msg + '\n');
+    });
     
-    console.log('\\n======================================================');
-    console.log('🎯 SUCCESS! LOCAL AI RECEPTIONIST IS LIVE AND RECORDING.');
-    console.log('👉 Open your browser firmly to: http://localhost:8005/v2-demo.html');
-    console.log('======================================================\\n');
+    console.log('\n======================================================');
+    console.log('🎯 SUCCESS! LOCAL AI RECEPTIONIST IS LIVE.');
+    console.log('👉 Open: http://localhost:8005/v2-demo.html');
+    console.log('======================================================\n');
     
   } catch (err) {
-    console.error('Failed to securely proxy tunnel:', err);
+    console.error('Failed to start tunnel:', err);
   }
 })();

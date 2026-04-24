@@ -2,8 +2,14 @@ services:
   - type: web
     name: voice-receptionist
     env: node
-    region: oregon 
+    region: oregon
+    plan: free
     buildCommand: npm install && npm run build
-    startCommand: npm start
+    startCommand: node dist/interfaces/cli/index.js serve --provider mock --port $PORT
     branch: master
     autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VAPI_WEBHOOK_SECRET
+        value: ""
